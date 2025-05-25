@@ -14,7 +14,7 @@ wss.on('connection', (ws) => {
   console.log('クライアント接続');
 
   ws.on('message', (message) => {
-    console.log('受信したメッセージ:', Stirng(message));
+    console.log('受信したメッセージ:', String(message));
     ws.send(`サーバーから返信: ${message}`);
 
     // ▽サンプル ------------------------------------------------
