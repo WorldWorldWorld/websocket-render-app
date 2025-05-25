@@ -10,12 +10,12 @@ const wss = new WebSocket.Server({ server });
 // メッセージリスト
 const wsList = [];
 
-wss.on('connection', (ws) => {
+wss.on('connection', (socket) => {
   console.log('クライアント接続');
 
-  ws.on('message', (message) => {
+  socket.on('message', (message) => {
     console.log('受信したメッセージ:', String(message));
-    ws.send(`サーバーから返信: ${message}`);
+    socket.send(`サーバーから返信: ${message}`);
 
     // ▽サンプル ------------------------------------------------
     // メッセージリストに追加
@@ -30,7 +30,7 @@ wss.on('connection', (ws) => {
 
   });
 
-  ws.on('close', () => {
+  socket.on('close', () => {
     console.log('クライアントが切断されました');
   });
 });
