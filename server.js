@@ -1,8 +1,8 @@
 /**
  * 本番環境　サーバー
  */
-import { express } from 'express';
-import { http } from 'http';
+import express from 'express';
+import http from 'http';
 import { WebSocketServer } from 'ws';
 
 const port = process.env.PORT || 3000;
