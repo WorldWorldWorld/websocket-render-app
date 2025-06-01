@@ -1,11 +1,14 @@
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
+/**
+ * 本番環境　サーバー
+ */
+import { express } from 'express';
+import { http } from 'http';
+import { WebSocketServer } from 'ws';
 
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
 
 // メッセージリスト
 const wsList = [];
@@ -39,6 +42,6 @@ app.get('/', (req, res) => {
   res.send('WebSocket サーバーが動作中です。');
 });
 
-server.listen(PORT, () => {
+server.listen(port, () => {
   console.log(`サーバーがポート ${PORT} で起動中`);
 });
