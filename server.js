@@ -43,5 +43,5 @@ app.get('/', (req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`サーバーがポート ${PORT} で起動中`);
+  console.log(`サーバーがポート ${port} で起動中`);
 });
