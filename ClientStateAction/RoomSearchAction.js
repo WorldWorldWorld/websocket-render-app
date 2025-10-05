@@ -24,7 +24,8 @@ export class RoomSearchAction extends ClientStateAction
             {
                 // ルーム番号が存在して(ランダムマッチで作成されてないルーム)
                 // ルーム番号が一致する場合
-                if ((roomInfo.number) && (roomInfo.number == objMessage.room_json[0].number))
+                if ((typeof roomInfo?.number !== "undefined") &&
+                    (roomInfo.number == objMessage.room_json[0].number))
                 {
                     // ルームを見つけた数を増やす
                     foundTotal++;
