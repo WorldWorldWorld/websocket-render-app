@@ -97,6 +97,18 @@ export class ClientStateAction
         // 受信メッセージで自身の操作キャラがCPUではないことを設定する
         objMessage.player_json.cpu_json.is_your_cpu = false;
 
+        // 現在の日時
+        let now = new Date();
+        // 受信メッセージで自身のルーム強制退出情報のメッセージ送信時刻を設定する
+        objMessage.player_json.kicked_out_room_json.send_message_datetime = 
+                                               now.getFullYear().toString() + '/' +     // 年
+                                               (now.getMonth() + 1).toString() + '/' +  // 月 メモ:最小値0から始まるため、｢now.getMonth() + 1｣
+                                               now.getDate().toString() + ' '+          // 日
+                                               now.getHours().toString() + ':' +        // 時
+                                               now.getMinutes().toString() + ':' +      // 分
+                                               now.getSeconds().toString() + '.'+       // 秒
+                                               now.getMilliseconds().toString();        // ミニ秒
+
         // 受信メッセージで対戦･協力の主な種類が設定されていない場合
         if((typeof objMessage.room_json[0].main_kind === 'undefined') || !(objMessage.room_json[0].main_kind))
         {
@@ -168,6 +180,18 @@ export class ClientStateAction
         // 受信メッセージで自身の操作キャラがCPUではないことを設定する
         objMessage.player_json.cpu_json.is_your_cpu = false;
 
+        // 現在の日時
+        let now = new Date();
+        // 受信メッセージで自身のルーム強制退出情報のメッセージ送信時刻を設定する
+        objMessage.player_json.kicked_out_room_json.send_message_datetime = 
+                                               now.getFullYear().toString() + '/' +     // 年
+                                               (now.getMonth() + 1).toString() + '/' +  // 月 メモ:最小値0から始まるため、｢now.getMonth() + 1｣
+                                               now.getDate().toString() + ' '+          // 日
+                                               now.getHours().toString() + ':' +        // 時
+                                               now.getMinutes().toString() + ':' +      // 分
+                                               now.getSeconds().toString() + '.'+       // 秒
+                                               now.getMilliseconds().toString();        // ミニ秒
+
         // サーバーで一時保存するルームの参加者にて自身のプレイヤー情報を追加する
         this.roomList[objMessage.game_kind][objMessage.room_json[0].id].participant_json.push(objMessage.player_json);
 
@@ -197,16 +221,60 @@ export class ClientStateAction
         }
 
         // 参加情報を取得する
-        let participantInfo = this.roomList[objMessage.game_kind][objMessage.room_json[0].id].participant_json;
-        // サーバーで一時保存した参加者情報から自身のプレイヤー情報を探す
+        let participantInfo = this.roomList[objMessage.game_kind][objMessage.room_json[0].id].participant_json;        
+        // 自身のプレイヤー情報 要素番号
+        let myPlayerInfoNumber = -1;
+        // 現在の日時
+        let now = new Date();
+        // サーバーで一時保存した参加者情報を確認する
         for ( let i = 0; i < participantInfo.length; i++)
         {
             // 自身の入室順に一致した場合
             if(participantInfo[i].enter_order == objMessage.player_json.enter_order)
             {
-                // 自身のプレイヤー状況に沿って、メッセージリストを設定する
-                return this.playerStateActionList[objMessage.player_json.state].Action(objMessage,i);
+                // 自身のプレイヤー情報 要素番号を設定する
+                myPlayerInfoNumber = i;
+
+                // 自身のルーム強制退出情報のメッセージ送信時刻を更新する
+                objMessage.player_json.kicked_out_room_json.send_message_datetime = 
+                                               now.getFullYear().toString() + '/' +     // 年
+                                               (now.getMonth() + 1).toString() + '/' +  // 月 メモ:最小値0から始まるため、｢now.getMonth() + 1｣
+                                               now.getDate().toString() + ' '+          // 日
+                                               now.getHours().toString() + ':' +        // 時
+                                               now.getMinutes().toString() + ':' +      // 分
+                                               now.getSeconds().toString() + '.'+       // 秒
+                                               now.getMilliseconds().toString();        // ミニ秒
+                participantInfo[i].kicked_out_room_json.send_message_datetime = objMessage.player_json.kicked_out_room_json.send_message_datetime;
+
             }
+            // 他の参加者を確認する
+            else
+            {
+                // ルーム強制退出最大時間を数値へ変換
+                participantInfo[i].kicked_out_room_json.max_time = Number(participantInfo[i].kicked_out_room_json.max_time);
+                // ルーム強制退出最大時間を数値へ変換できない場合
+                if(isNaN(participantInfo[i].kicked_out_room_json.max_time))
+                {
+                    console.log("｢ルーム強制退出最大時間｣を数値へ変換できません");
+                    return;
+                }
+
+                // 他の参加者が最終のメッセージを送信してからルーム強制退出最大時間 以上に経過した場合
+                if(now - new Date(participantInfo[i].kicked_out_room_json.send_message_datetime) >= participantInfo[i].kicked_out_room_json.max_time)
+                {
+                    // その参加者をルームから強制退出させる
+                    participantInfo.splice(i, 1);
+                    // 他の参加者を確認する
+                    i--;
+                }
+            }
+        }
+
+        // 参加者情報から自身のプレイヤー情報を見つけた場合
+        if(myPlayerInfoNumber > -1)
+        {
+            // 自身のプレイヤー状況に沿って、メッセージリストを設定する
+            return this.playerStateActionList[objMessage.player_json.state].Action(objMessage,myPlayerInfoNumber);
         }
 
         // 上記の条件に一致しない(自身のプレイヤー情報が参加者情報に含まれていない(自身が強制退出された))場合
