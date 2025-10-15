@@ -24,7 +24,7 @@ export class RoomSearchAction extends ClientStateAction
             {
                 // ルーム番号が存在して(ランダムマッチで作成されてないルーム)
                 // ルーム番号が一致する場合
-                if ((typeof roomInfo?.number !== "undefined") && (!roomInfo.number) &&
+                if ((typeof roomInfo?.number !== "undefined") && (roomInfo.number) &&
                     (roomInfo.number == objMessage.room_json[0].number))
                 {
                     // ルームを見つけた数を増やす
@@ -48,7 +48,7 @@ export class RoomSearchAction extends ClientStateAction
                 {
                     // ルーム番号が存在している(ランダムマッチで作成されてないルーム)であり
                     // 対戦･協力の主な種類が一致する場合
-                    if ((typeof roomInfo?.number !== "undefined") && (!roomInfo.number) &&
+                    if ((typeof roomInfo?.number !== "undefined") && (roomInfo.number) &&
                         (Number(roomInfo.main_kind) == Number(mainKindInfo)))
                     {
                         // ルームを見つけた数を増やす
@@ -67,7 +67,7 @@ export class RoomSearchAction extends ClientStateAction
             for (const roomInfo of this.roomList[objMessage.game_kind])
             {
                 // ルーム番号が存在する(ランダムマッチで作成されてないルーム)場合
-                if((typeof roomInfo?.number !== "undefined") && (!roomInfo.number))
+                if((typeof roomInfo?.number !== "undefined") && (roomInfo.number))
                 {
                     // ルームを見つけた数を増やす
                     foundTotal++;
