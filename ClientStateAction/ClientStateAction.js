@@ -229,6 +229,32 @@ export class ClientStateAction
         // サーバーで一時保存した参加者情報を確認する
         for ( let i = 0; i < participantInfo.length; i++)
         {
+            // ルーム強制退出最大時間を数値へ変換
+            participantInfo[i].kicked_out_room_json.max_time = Number(participantInfo[i].kicked_out_room_json.max_time);
+            // ルーム強制退出最大時間を数値へ変換できない場合
+            if(isNaN(participantInfo[i].kicked_out_room_json.max_time))
+            {
+                console.log("｢ルーム強制退出最大時間｣を数値へ変換できません");
+                return;
+            }
+
+            // 参加者が最終のメッセージを送信してからルーム強制退出最大時間 以上に経過した場合
+            if(now - new Date(participantInfo[i].kicked_out_room_json.send_message_datetime) >= participantInfo[i].kicked_out_room_json.max_time)
+            {
+                // 部屋からその参加者を追い出す
+                this.playerStateActionList[0].KickTheParticipantOutOfTheRoom(objMessage,i);
+
+                // 追い出し処理でルームが削除された もしくは 追い出した者の入室順が自身の入室順に一致した 場合
+                if((this.roomList[objMessage.game_kind][objMessage.room_json[0].id] === "undefined")||
+                   (participantInfo[i].enter_order == objMessage.player_json.enter_order))
+                {
+                    // 自身のプレイヤー情報 要素番号をリセットする
+                    myPlayerInfoNumber = -1;
+                    // 探索を止める
+                    break;
+                } 
+            }
+
             // 自身の入室順に一致した場合
             if(participantInfo[i].enter_order == objMessage.player_json.enter_order)
             {
@@ -245,33 +271,12 @@ export class ClientStateAction
                                                now.getSeconds().toString() + '.'+       // 秒
                                                now.getMilliseconds().toString();        // ミニ秒
                 participantInfo[i].kicked_out_room_json.send_message_datetime = objMessage.player_json.kicked_out_room_json.send_message_datetime;
-
-            }
-            // 他の参加者を確認する
-            else
-            {
-                // ルーム強制退出最大時間を数値へ変換
-                participantInfo[i].kicked_out_room_json.max_time = Number(participantInfo[i].kicked_out_room_json.max_time);
-                // ルーム強制退出最大時間を数値へ変換できない場合
-                if(isNaN(participantInfo[i].kicked_out_room_json.max_time))
-                {
-                    console.log("｢ルーム強制退出最大時間｣を数値へ変換できません");
-                    return;
-                }
-
-                // 他の参加者が最終のメッセージを送信してからルーム強制退出最大時間 以上に経過した場合
-                if(now - new Date(participantInfo[i].kicked_out_room_json.send_message_datetime) >= participantInfo[i].kicked_out_room_json.max_time)
-                {
-                    // その参加者をルームから強制退出させる
-                    participantInfo.splice(i, 1);
-                    // 他の参加者を確認する
-                    i--;
-                }
             }
         }
 
-        // 参加者情報から自身のプレイヤー情報を見つけた場合
-        if(myPlayerInfoNumber > -1)
+        // ルームが削除されずに、参加者情報から自身のプレイヤー情報を見つけた場合
+        if((this.roomList[objMessage.game_kind][objMessage.room_json[0].id] !== "undefined")&&
+           (myPlayerInfoNumber > -1))
         {
             // 自身のプレイヤー状況に沿って、メッセージリストを設定する
             return this.playerStateActionList[objMessage.player_json.state].Action(objMessage,myPlayerInfoNumber);
@@ -284,6 +289,14 @@ export class ClientStateAction
         delete objMessage.room_json;
         // そのメッセージをソケットに送信する
         return [JSON.stringify(objMessage)];
+    }
+
+    /**
+     * 自身が関わるゲーム内で、すべてのルームにいる参加者の最終メッセージ送信時刻を確認する
+     * @param {Object} objMessage クライアントから受信したメッセージ
+     */
+    CheckParticipantInfoInAllRoom(objMessage)
+    {
 
     }
 }
