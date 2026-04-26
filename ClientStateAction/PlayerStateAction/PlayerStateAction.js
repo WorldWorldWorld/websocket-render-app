@@ -153,9 +153,12 @@ export class PlayerStateAction
         {
             // サーバーで一時保存する指定したルームを削除して、削除したルームを｢undefine｣で残す
             delete this.roomList[objMessage.game_kind][objMessage.room_json[0].id];
+            // 下記の処理を飛ばす
+            return;
         }
+        
         // 前回まで退出者の状態が｢ゲーム画面に読み込み中｣｢対戦・協力｣である場合
-        else if(participantInfo[participantIndex].state >= PlayerStateAction.playerStateKind.loading) 
+        if(participantInfo[participantIndex].state >= PlayerStateAction.playerStateKind.loading) 
         {
             // 試合を強制終了する場合
             if(this.roomList[objMessage.game_kind][objMessage.room_json[0].id].is_stop_playing == true)
@@ -201,32 +204,50 @@ export class PlayerStateAction
                 // サーバーで一時保存する参加情報を、CPUに設定した退出者のプレイヤー情報に差し替える
                 participantInfo.splice(participantIndex, 1, objMessage.player_json);
             }
-            else
-            {
-                // 参加情報から退出者を削除する前に、退出者のプレイヤー番号を取得する
-                let playerNumber = participantInfo[participantIndex]?.number;
-
-                // サーバーで一時保存する退出者の参加情報のみ削除して、削除した参加情報を｢undefine｣で残さない
-                participantInfo.splice(participantIndex, 1);
-
-                // サーバーで一時保存する他の参加者のプレイヤー番号を更新する
-                if(participantIndex < participantInfo.length)
-                {
-                    for (let i = participantIndex; i < participantInfo.length; i++)
-                    {
-                        // CPUではない場合、プレイヤー番号を更新する
-                        if(participantInfo[i].cpu_json.is_your_cpu == false)
-                        {
-                            participantInfo[i].number = playerNumber;
-                            // 次のプレイヤー番号に注目する
-                            playerNumber++;
-                        }
-                    }
-                }
-            }
             
             // サーバーで一時保存する参加者の人数を減らす
             this.roomList[objMessage.game_kind][objMessage.room_json[0].id].total--;
+            // 下記の処理を飛ばす
+            return;
+        }
+        
+        // どれにも該当しない場合---------------------------------------------------------------------
+        // 部屋から参加者を削除する
+        this.DeleteTheParticipantOutOfTheRoom(objMessage,participantIndex);
+        
+        // サーバーで一時保存する参加者の人数を減らす
+        this.roomList[objMessage.game_kind][objMessage.room_json[0].id].total--;
+    }
+
+    /**
+     * 部屋から参加者を削除する
+     * @param {Object} objMessage クライアントから受信したメッセージ
+     * @param {Int} participantIndex 参加情報の要素番号
+     */
+    DeleteTheParticipantOutOfTheRoom(objMessage,participantIndex)
+    {
+        // 参加者情報を取得する
+        let participantInfo = this.roomList[objMessage.game_kind][objMessage.room_json[0].id].participant_json;
+
+        // 参加情報から退出者を削除する前に、退出者のプレイヤー番号を取得する
+        let playerNumber = participantInfo[participantIndex]?.number;
+
+        // サーバーで一時保存する退出者の参加情報のみ削除して、削除した参加情報を｢undefine｣で残さない
+        participantInfo.splice(participantIndex, 1);
+
+        // サーバーで一時保存する他の参加者のプレイヤー番号を更新する
+        if(participantIndex < participantInfo.length)
+        {
+            for (let i = participantIndex; i < participantInfo.length; i++)
+            {
+                // CPUではない場合、プレイヤー番号を更新する
+                if(participantInfo[i].cpu_json.is_your_cpu == false)
+                {
+                    participantInfo[i].number = playerNumber;
+                    // 次のプレイヤー番号に注目する
+                    playerNumber++;
+                }
+            }
         }
     }
 }
